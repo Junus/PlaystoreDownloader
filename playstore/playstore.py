@@ -54,7 +54,7 @@ class Playstore(object):
 
     LOGIN_URL = "https://android.clients.google.com/auth"
 
-    def __init__(self, config_file: str = "credentials.json"):
+    def __init__(self, config_file: str = "credentials.json", use_env: bool = True):
         """
         Playstore object constructor.
 
@@ -68,17 +68,28 @@ class Playstore(object):
         # goes wrong in this phase, no further operations can be executed.
 
         try:
-            self._load_configuration(config_file)
+            if use_env:
+                self.android_id: str = os.environ["ANDROID_ID"]
 
-            self.android_id: str = self.configuration["ANDROID_ID"]
+                self.email: str = os.environ["USERNAME"]
+                self.encrypted_password: bytes = EncryptedCredentials(
+                    os.environ["USERNAME"], os.environ["PASSWORD"]
+                ).get_encrypted_credentials()
 
-            self.email: str = self.configuration["USERNAME"]
-            self.encrypted_password: bytes = EncryptedCredentials(
-                self.configuration["USERNAME"], self.configuration["PASSWORD"]
-            ).get_encrypted_credentials()
+                self.lang_code: str = os.environ["LANG_CODE"]
+                self.lang: str = os.environ["LANG"]
+            else:
+                self._load_configuration(config_file)
 
-            self.lang_code: str = self.configuration["LANG_CODE"]
-            self.lang: str = self.configuration["LANG"]
+                self.android_id: str = self.configuration["ANDROID_ID"]
+
+                self.email: str = self.configuration["USERNAME"]
+                self.encrypted_password: bytes = EncryptedCredentials(
+                    self.configuration["USERNAME"], self.configuration["PASSWORD"]
+                ).get_encrypted_credentials()
+
+                self.lang_code: str = self.configuration["LANG_CODE"]
+                self.lang: str = self.configuration["LANG"]
 
         except json.decoder.JSONDecodeError as ex:
             self.logger.critical(f"The configuration file is not a valid json: {ex}")
