@@ -4,7 +4,7 @@ import logging
 import os
 import re
 
-from flask import Flask, make_response, jsonify, abort
+from flask import Flask, make_response, jsonify, abort, send_from_directory
 
 from playstore.playstore import Playstore
 
@@ -43,14 +43,15 @@ def create_app():
 
 application = create_app()
 
+
 @application.errorhandler(500)
 def application_error(error):
     logger.error(error)
     return make_response(jsonify(str(error)), error.code)
 
 
-@application.route("/download/<package_name>", methods=["GET"], strict_slashes=False)
-def download(package_name):
+@application.route("/process/<package_name>", methods=["GET"], strict_slashes=False)
+def process(package_name):
     if package_name_regex.match(package_name):
         try:
             api = Playstore("", True)
@@ -107,6 +108,12 @@ def download(package_name):
     else:
         logger.critical("Please specify a valid package name")
         abort(400, description='Not valid package')
+
+
+@application.route('/download/<path:filename>', methods=['GET', 'POST'])
+def download(filename):
+    return send_from_directory(directory=downloaded_apk_location, filename=filename)
+
 
 if __name__ == "__main__":
     application.run(host="0.0.0.0", port=5000)
