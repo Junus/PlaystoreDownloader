@@ -12,3 +12,4 @@ COPY . /app/
 
 # Run with -u $(id -u):$(id -g) to avoid file permission issues.
 ENTRYPOINT ["python", "flask_api.py"]
+EXPOSE 5000
